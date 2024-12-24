@@ -1,0 +1,546 @@
+<html><head><base href="https://web-platform-1.web.app">
+<title>Gerador de Sinais - Mines</title>
+<style>
+:root {
+  --primary: #2ecc71;
+  --dark: #27ae60;
+  --accent: #3498db;
+  --light: #ecf0f1;
+  --danger: #e74c3c;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  animation: slideIn 0.5s ease-out, fadeOut 0.5s ease-in 4.5s forwards;
+  z-index: 1000;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+body {
+  background: #2c3e50;
+  color: var(--light);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  padding: 20px;
+  background: #34495e;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.register-btn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.register-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.mines-config {
+  background: #34495e;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.mines-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.mine-cell {
+  aspect-ratio: 1;
+  background: var(--dark);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+}
+
+.mine-cell.revealed {
+  background: var(--primary);
+}
+
+.mine-cell.mine {
+  background: var(--danger);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9em;
+}
+
+#generateBtn {
+  background: #e74c3c;
+  font-size: 1.2em;
+  padding: 15px 30px;
+  margin: 10px auto;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  grid-column: 1 / -1;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.selected {
+  background: var(--primary);
+}
+
+.timer {
+  font-size: 24px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.platform-frame {
+  width: 100%;
+  height: 600px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  background: #34495e;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.footer a {
+  color: var(--light);
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.footer a:hover {
+  color: var(--primary);
+}
+
+.results-tracker {
+  background: #34495e;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.result-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.win-btn {
+  background: var(--primary) !important;
+}
+
+.loss-btn {
+  background: var(--danger) !important;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 15px 0;
+  padding: 15px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.user-results-tracker {
+  background: #34495e;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.user-stat-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  padding: 10px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  margin: 5px 0;
+  align-items: center;
+}
+
+.user-stat-row span {
+  text-align: center;
+}
+
+.user-stat-header {
+  font-weight: bold;
+  background: rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Gerador de Sinais - Mines</h1>
+    <h2>Plataforma: JOGABET</h2>
+    <a href="https://jogabet.xyz/register?code=5364172595" class="register-btn" target="_blank">CADASTRAR NA JOGABET</a>
+  </div>
+  
+  <div class="mines-config">
+    <h2>Configura&#xe7;&#xf5;es</h2>
+    <div class="controls" id="mineButtons">
+      <!-- Buttons will be generated via JavaScript -->
+    </div>
+
+    <button id="generateBtn" onclick="generateSignal()">GERAR SINAL</button>
+    
+    <div class="timer">
+      Tempo restante: <span id="countdown">00:00</span>
+    </div>
+    
+    <div class="mines-grid" id="minesGrid">
+      <!-- Grid será gerado via JavaScript -->
+    </div>
+
+    <div class="result-buttons" id="resultButtons" style="display: none;">
+      <button onclick="recordResult(&apos;win&apos;)" class="win-btn">&#x2705; Vit&#xf3;ria</button>
+      <button onclick="recordResult(&apos;loss&apos;)" class="loss-btn">&#x274c; Derrota</button>
+    </div>
+  </div>
+
+  <div class="user-results-tracker">
+    <h2>Resultados por Usu&#xe1;rio</h2>
+    <div class="user-stats" id="userStats">
+      <!-- User stats will be populated by JS -->
+    </div>
+  </div>
+
+  <div class="results-tracker">
+    <h2>Resultados do Dia</h2>
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-value" id="totalSignals">0</div>
+        <div class="stat-label">Sinais</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalWins">0</div>
+        <div class="stat-label">Vit&#xf3;rias</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalLosses">0</div>
+        <div class="stat-label">Derrotas</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="winRate">0%</div>
+        <div class="stat-label">Taxa de Acerto</div>
+      </div>
+    </div>
+  </div>
+  
+  <iframe class="platform-frame" src="https://jogabet.xyz/register?code=5364172595" id="platformFrame">
+  </iframe>
+
+  <div class="footer">
+    <p>Criado por: <a href="https://www.instagram.com/filipi_busines_s?igsh=ZGUzMzM3NWJiOQ==" target="_blank">Filipi_busines_s</a></p>
+  </div>
+</div>
+
+<script>let currentMines = 3;
+let grid = [];
+let timer = null;
+let isGenerating = false;
+let stats = {
+  totalSignals: 0,
+  wins: 0,
+  losses: 0
+};
+let userStats = {};
+function loadStats() {
+  const savedStats = localStorage.getItem('minesStats');
+  if (savedStats) {
+    stats = JSON.parse(savedStats);
+    updateStatsDisplay();
+  }
+}
+function saveStats() {
+  localStorage.setItem('minesStats', JSON.stringify(stats));
+}
+function updateStatsDisplay() {
+  document.getElementById('totalSignals').textContent = stats.totalSignals;
+  document.getElementById('totalWins').textContent = stats.wins;
+  document.getElementById('totalLosses').textContent = stats.losses;
+  const winRate = stats.totalSignals > 0 ? Math.round(stats.wins / stats.totalSignals * 100) : 0;
+  document.getElementById('winRate').textContent = `${winRate}%`;
+}
+function recordResult(result) {
+  stats.totalSignals++;
+  if (result === 'win') {
+    stats.wins++;
+  } else {
+    stats.losses++;
+  }
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastInitial = lastInitials[Math.floor(Math.random() * lastInitials.length)];
+  const userName = `${firstName} ${lastInitial}`;
+  if (!userStats[userName]) {
+    userStats[userName] = {
+      totalSignals: 0,
+      wins: 0,
+      losses: 0
+    };
+  }
+  userStats[userName].totalSignals++;
+  if (result === 'win') {
+    userStats[userName].wins++;
+  } else {
+    userStats[userName].losses++;
+  }
+  saveStats();
+  saveUserStats();
+  updateStatsDisplay();
+  updateUserStatsDisplay();
+  document.getElementById('resultButtons').style.display = 'none';
+}
+const firstNames = ['Maria', 'João', 'Ana', 'Pedro', 'Lucas', 'Julia', 'Carlos', 'Paulo', 'Sandra', 'Roberto', 'Nadia', 'Leonardo', 'Patricia', 'Bruno', 'Amanda'];
+const lastInitials = ['S.', 'M.', 'R.', 'T.', 'G.', 'P.', 'L.', 'B.', 'C.', 'D.'];
+function showRandomNotification() {
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastInitial = lastInitials[Math.floor(Math.random() * lastInitials.length)];
+  const userName = `${firstName} ${lastInitial}`;
+  const amount = Math.floor(Math.random() * 5000) + 500;
+  if (!userStats[userName]) {
+    userStats[userName] = {
+      totalSignals: 0,
+      wins: 0,
+      losses: 0
+    };
+  }
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = `${userName} acabou de sacar: R$ ${amount} com o Robô do mines`;
+  document.body.appendChild(notification);
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+function initGrid() {
+  const gridElement = document.getElementById('minesGrid');
+  gridElement.innerHTML = '';
+  grid = [];
+  for (let i = 0; i < 25; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'mine-cell';
+    cell.dataset.index = i;
+    gridElement.appendChild(cell);
+    grid.push({
+      element: cell,
+      isMine: false,
+      isRevealed: false
+    });
+  }
+}
+function generateMineButtons() {
+  const buttonContainer = document.getElementById('mineButtons');
+  buttonContainer.innerHTML = '';
+  for (let i = 2; i <= 23; i++) {
+    const button = document.createElement('button');
+    button.id = `mines${i}`;
+    button.textContent = `${i}`;
+    button.onclick = () => changeMines(i);
+    buttonContainer.appendChild(button);
+  }
+}
+function changeMines(num) {
+  if (isGenerating) return;
+  currentMines = num;
+  document.querySelectorAll('.controls button').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  document.getElementById(`mines${num}`).classList.add('selected');
+  grid.forEach(cell => {
+    cell.isMine = false;
+    cell.isRevealed = false;
+    cell.element.className = 'mine-cell';
+    cell.element.innerHTML = '';
+  });
+}
+function generateSignal() {
+  if (isGenerating) return;
+  isGenerating = true;
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('resultButtons').style.display = 'none';
+  grid.forEach(cell => {
+    cell.isMine = false;
+    cell.isRevealed = false;
+    cell.element.className = 'mine-cell';
+    cell.element.innerHTML = '';
+  });
+  let minesPlaced = 0;
+  while (minesPlaced < currentMines) {
+    const randomIndex = Math.floor(Math.random() * 25);
+    if (!grid[randomIndex].isMine) {
+      grid[randomIndex].isMine = true;
+      grid[randomIndex].element.classList.add('mine');
+      grid[randomIndex].element.innerHTML = '💣';
+      minesPlaced++;
+    }
+  }
+  grid.forEach(cell => {
+    if (!cell.isMine) {
+      cell.isRevealed = true;
+      cell.element.classList.add('revealed');
+    }
+  });
+  document.getElementById('resultButtons').style.display = 'flex';
+  startTimer(30);
+}
+function startTimer(duration) {
+  if (timer) clearInterval(timer);
+  let timeLeft = duration;
+  const countdownElement = document.getElementById('countdown');
+  timer = setInterval(() => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    if (--timeLeft < 0) {
+      clearInterval(timer);
+      initGrid();
+      isGenerating = false;
+      document.getElementById('generateBtn').disabled = false;
+    }
+  }, 1000);
+}
+function loadUserStats() {
+  const savedUserStats = localStorage.getItem('userMinesStats');
+  if (savedUserStats) {
+    userStats = JSON.parse(savedUserStats);
+  }
+  updateUserStatsDisplay();
+}
+function saveUserStats() {
+  localStorage.setItem('userMinesStats', JSON.stringify(userStats));
+}
+function updateUserStatsDisplay() {
+  const container = document.getElementById('userStats');
+  container.innerHTML = `
+    <div class="user-stat-row user-stat-header">
+      <span>Usuário</span>
+      <span>Sinais</span>
+      <span>Vitórias</span>
+      <span>Derrotas</span>
+      <span>Taxa</span>
+    </div>
+  `;
+  Object.entries(userStats).forEach(([user, stats]) => {
+    const winRate = stats.totalSignals > 0 ? Math.round(stats.wins / stats.totalSignals * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'user-stat-row';
+    row.innerHTML = `
+      <span>${user}</span>
+      <span>${stats.totalSignals}</span>
+      <span>${stats.wins}</span>
+      <span>${stats.losses}</span>
+      <span>${winRate}%</span>
+    `;
+    container.appendChild(row);
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  initGrid();
+  generateMineButtons();
+  document.getElementById('mines3').classList.add('selected');
+  loadStats();
+  loadUserStats();
+  showRandomNotification();
+  setInterval(() => {
+    showRandomNotification();
+  }, Math.random() * 5000 + 10000);
+});</script>
+</body></html>
